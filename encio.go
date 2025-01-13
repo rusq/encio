@@ -1,18 +1,17 @@
 // Package encio provides input/output functions that write encrypted using
 // AES-256-CFB data.
 //
-// The encryption key is the machine identifier, unique to the operating 
+// The encryption key is the machine identifier, unique to the operating
 // system.
 //
 // This makes file non-transferrable between devices.
 //
 // Encrypted container structure is the following:
 //
-//   |__...__|____________...
-//    0  ^   16   ^
-//       |        +-- encrypted data
-//       +----------- 16 bytes IV
-//
+//	|__...__|____________...
+//	 0  ^   16   ^
+//	    |        +-- encrypted data
+//	    +----------- 16 bytes IV
 package encio
 
 import (
@@ -33,13 +32,26 @@ var appID = "76d19bf515c59483e8923fcad9f1b65025d445e71801688b7edfb9cc2e64497f"
 
 var ErrDecrypt = errors.New("decryption error")
 
+type options struct {
+	machineIDFn func(string) (string, error)
+}
+
+type Option func(*options)
+
+// WithID allows to override the machineID with a custom value.
+func WithID(override string) Option {
+	return func(o *options) {
+		o.machineIDFn = idOverrideFn(override)
+	}
+}
+
 // Open opens an encrypted file container.
-func Open(filename string) (io.ReadCloser, error) {
+func Open(filename string, opts ...Option) (io.ReadCloser, error) {
 	f, err := os.Open(filename)
 	if err != nil {
 		return nil, err
 	}
-	r, err := NewReader(f)
+	r, err := NewReader(f, opts...)
 	if err != nil {
 		f.Close()
 		return nil, err
@@ -53,7 +65,7 @@ func Open(filename string) (io.ReadCloser, error) {
 
 // NewReader wraps the ciphertext reader, and returns the reader that a
 // plaintext can be read from.
-func NewReader(r io.Reader) (io.Reader, error) {
+func NewReader(r io.Reader, opts ...Option) (io.Reader, error) {
 	var iv [aes.BlockSize]byte
 	if n, err := r.Read(iv[:]); err != nil {
 		return nil, err
@@ -61,7 +73,14 @@ func NewReader(r io.Reader) (io.Reader, error) {
 		return nil, ErrDecrypt
 	}
 
-	key, err := encryptionKey()
+	o := options{
+		machineIDFn: machineIDFn,
+	}
+	for _, opt := range opts {
+		opt(&o)
+	}
+
+	key, err := encryptionKey(o.machineIDFn)
 	if err != nil {
 		return nil, err
 	}
@@ -80,12 +99,12 @@ func (rc *readCloser) Close() error {
 }
 
 // Create creates an encrypted file container.
-func Create(filename string) (io.WriteCloser, error) {
+func Create(filename string, opts ...Option) (io.WriteCloser, error) {
 	f, err := os.Create(filename)
 	if err != nil {
 		return nil, err
 	}
-	ew, err := NewWriter(f)
+	ew, err := NewWriter(f, opts...)
 	if err != nil {
 		f.Close()
 		return nil, err
@@ -102,7 +121,13 @@ func Create(filename string) (io.WriteCloser, error) {
 // NewWriter wraps the writer and returns the WriteCloser.  Any information
 // written to the writer is encrypted with the hashed machineID.  WriteCloser
 // must be closed to flush any buffered data.
-func NewWriter(w io.Writer) (io.WriteCloser, error) {
+func NewWriter(w io.Writer, opts ...Option) (io.WriteCloser, error) {
+	o := options{
+		machineIDFn: machineIDFn,
+	}
+	for _, opt := range opts {
+		opt(&o)
+	}
 	iv, err := generateIV()
 	if err != nil {
 		return nil, err
@@ -112,7 +137,7 @@ func NewWriter(w io.Writer) (io.WriteCloser, error) {
 		return nil, fmt.Errorf("failed to write the initialisation vector: %w", err)
 	}
 
-	key, err := encryptionKey()
+	key, err := encryptionKey(o.machineIDFn)
 	if err != nil {
 		return nil, err
 	}
@@ -144,8 +169,8 @@ func generateIV() ([aes.BlockSize]byte, error) {
 
 // encryptionKey returns an encryption key from the passphrase that is
 // generated from a hashed by appID machineID.
-func encryptionKey() ([]byte, error) {
-	id, err := machineIDFn(appID)
+func encryptionKey(idFn func(string) (string, error)) ([]byte, error) {
+	id, err := idFn(appID)
 	if err != nil {
 		return nil, err
 	}
