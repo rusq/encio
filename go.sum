@@ -2,6 +2,8 @@ github.com/denisbrodbeck/machineid v1.0.1 h1:geKr9qtkB876mXguW2X6TU4ZynleN6ezuMS
 github.com/denisbrodbeck/machineid v1.0.1/go.mod h1:dJUwb7PTidGDeYyUBmXZ2GphQBbjJCrnectwCyxcUSI=
 github.com/rusq/secure v0.0.4 h1:svpiZHfHnx89eEDCCFI9OXG1Y8hL9kUWUG6fJbrWUOI=
 github.com/rusq/secure v0.0.4/go.mod h1:F1QilMKreuFRjov0UY7DZSIXn77/8RqMVGu2zV0RtqY=
+github.com/rusq/secure v0.1.1 h1:dDqkFv3ES1Y/JdPSl7vu1ONIv44LiJVGchaYEns38bA=
+github.com/rusq/secure v0.1.1/go.mod h1:SVqDbGmXRLOTTVGtJMeNFEQyZKMwy9ADyj26Ts6Uq7Y=
 golang.org/x/crypto v0.54.0 h1:YLIA59K4fiNzHzjnZt2tUJQjQtUWfWbeHBqKtk3eScw=
 golang.org/x/crypto v0.54.0/go.mod h1:KWL8ny2AZdGR2cWmzeHrp2azQPGogOv+HeQaVEXC2dk=
 golang.org/x/sys v0.47.0 h1:o7XGOvZQCADBQQ4Y7VNq2dRWQR7JmOUW8Kxx4ZsNgWs=

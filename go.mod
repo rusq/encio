@@ -4,7 +4,7 @@ go 1.25.0
 
 require (
 	github.com/denisbrodbeck/machineid v1.0.1
-	github.com/rusq/secure v0.0.4
+	github.com/rusq/secure v0.1.1
 )
 
 require (
