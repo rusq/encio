@@ -67,7 +67,7 @@ func isInContainer(cgroupPath string) (bool, error) {
 	scan := bufio.NewScanner(f)
 
 	lines := 0
-	for scan.Scan() && !(lines > maxlines) {
+	for scan.Scan() && lines <= maxlines {
 		text := scan.Text()
 		for _, s := range []string{idDockerNew, idDocker, idLXC} {
 			if strings.Contains(text, s) {
